@@ -33,6 +33,11 @@
 			<artifactId>parser</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>org.dsystmes</groupId>
+			<artifactId>Rules</artifactId>
+			<version>0.0.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>
