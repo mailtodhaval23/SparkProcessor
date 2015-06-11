@@ -19,6 +19,9 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.InitialPositionIn
 
 public class StreamFactory  implements Serializable{
 
+
+	private static final long serialVersionUID = 1L;
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static <T> DataStream<T> CreateStream(JavaStreamingContext ssc, DataStream.Type type,
 			Attributes attr) {

@@ -1,5 +1,5 @@
 
-package org.dsystems.processor;
+package org.dsystems.processors;
 
 import scala.Tuple2;
 import com.google.common.collect.Lists;

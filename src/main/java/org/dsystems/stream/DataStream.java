@@ -7,11 +7,13 @@ import org.dsystems.parser.Parser;
 
 public class DataStream<T>  implements Serializable{
 
+	private static final long serialVersionUID = 1L;
+
 	public static enum Type{NETWORK, KINESIS};
 	
 	private transient JavaDStream<T> stream;
 	private Parser parser;	
-	
+	private String name;
 	
 	public DataStream(JavaDStream<T> stream) {
 		this.setStream(stream);
@@ -31,6 +33,14 @@ public class DataStream<T>  implements Serializable{
 
 	public void setParser(Parser parser) {
 		this.parser = parser;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 

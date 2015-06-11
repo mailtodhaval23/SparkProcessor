@@ -6,6 +6,12 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>SparkProcessor</name>
 	<description>SparkProcessor</description>
+		<parent>
+		<groupId>org.dsystems</groupId>
+		<artifactId>RulesOnSpark</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.spark</groupId>

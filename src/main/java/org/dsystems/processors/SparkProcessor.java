@@ -1,4 +1,4 @@
-package org.dsystems.processor;
+package org.dsystems.processors;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -14,6 +14,8 @@ import org.dsystems.parser.Parser;
 import org.dsystems.parser.ParserFactory;
 import org.dsystems.rules.engine.RulesEngine;
 import org.dsystems.stream.DataStream;
+import org.dsystems.stream.SparkProcessorConfig;
+import org.dsystems.stream.StreamConfig;
 import org.dsystems.stream.StreamFactory;
 import org.dsystems.utils.Record;
 
@@ -31,40 +33,79 @@ public class SparkProcessor implements Serializable{
 		this.streams = new ArrayList<DataStream>();
 	}*/
 
-	private SparkProcessor(String name, Attributes attrs) {
+	private SparkProcessor(String name) {
+		initSparkContext(name);
 		this.streams = new ArrayList<DataStream>();
 		this.name = name;
+	}
+	private SparkProcessor(String name, Attributes attrs) {
+		this(name);
+	    initRulesEngine(attrs);
+	}
+
+	private void initSparkContext(String name) {
 		SparkConf sparkConf = new SparkConf().setAppName(name);
 	    jsc = new JavaStreamingContext(sparkConf, Durations.seconds(10));
-	    if (attrs.getValue("rules_file") != null) {
-	    	if (attrs.getValue("actions_file") != null) {
-	    		this.ruleEngine = RulesEngine.init(attrs.getValue("rules_file"),attrs.getValue("actions_file"));
-	    	} else { 
-	    		this.ruleEngine = RulesEngine.init(attrs.getValue("rules_file"));
-	    	}
+	}
+
+	private void initRulesEngine(Attributes attrs) {
+		if (attrs.getValue("rules_file") != null) {
+			this.initRulesEngine(attrs.getValue("rules_file"),attrs.getValue("actions_file"));
 	    }
+	}
+
+	private void initRulesEngine(String rulesFile, String actionsFile){
+		this.ruleEngine = RulesEngine.init(rulesFile,actionsFile);
+	}
+	private void initRulesEngine(String rulesFile){
+		this.initRulesEngine(rulesFile, null);
 	}
 
 	/*private SparkProcessor(List<DataStream> streams, Parser parser) {
 		this.streams = streams;
 	}*/
+	public static boolean CreateSparkProcessor(SparkProcessorConfig config) {
+		System.out.println("CreateSparkProcessor:: Config: " + config.toString());
+		if (sp == null){
+			sp = new SparkProcessor(config.getName());
+			sp.name = config.getName();
+			for (StreamConfig streamConfig: config.getStreamConfigs()){
+				sp.addStream(streamConfig);
+			}
+			if (sp.streams.size() > 0) {
+				sp.initRulesEngine(config.getRulesFileName(), config.getActionsFileName());
+				return sp.start();
+			}
+		}
+		return false;
+	}
 	
-	public static SparkProcessor CreateSparkProcessor(String name, Attributes attrs) {
+/*	public static SparkProcessor CreateSparkProcessor(String name, Attributes attrs) {
 		if (sp == null) {
 			sp = new SparkProcessor(name, attrs);
 		}
 		return sp;
 	}
-	
+*/	
+	public boolean addStream(StreamConfig streamConfig) {
+		DataStream.Type streamType = DataStream.Type.valueOf(streamConfig.getInputConfig().getType());
+		Attributes streamAttrs = streamConfig.getInputConfig().getAttributes();
+		Parser.Type parserType = Parser.Type.valueOf(streamConfig.getParserConfig().getType());
+		Attributes parserAttrs = streamConfig.getParserConfig().getAttributes();
+		return this.addStream(streamType, streamAttrs, parserType, parserAttrs);
+		
+	}
 	public boolean addStream(DataStream.Type streamType, Attributes streamAttrs, Parser.Type parserType, Attributes parserAttrs) {
 		DataStream ds = StreamFactory.CreateStream(jsc, streamType, streamAttrs);
 		Parser parser = ParserFactory.getParser(parserType, parserAttrs);
+		if (parser == null)
+			return false;
 		ds.setParser(parser);
 		this.streams.add(ds);
 		return true;
 	}
 
-	public boolean start() {
+	private boolean start() {
 		
 		List<JavaDStream<Record>> records = new ArrayList<JavaDStream<Record>>();
 		final RulesEngine rules = this.ruleEngine;
