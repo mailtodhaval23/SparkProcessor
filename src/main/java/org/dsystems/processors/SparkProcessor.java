@@ -7,8 +7,11 @@ import java.util.List;
 import org.dsystems.utils.Attributes;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.PairFlatMapFunction;
+import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaDStream;
+import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.dsystems.parser.Parser;
 import org.dsystems.parser.ParserFactory;
@@ -18,6 +21,8 @@ import org.dsystems.stream.SparkProcessorConfig;
 import org.dsystems.stream.StreamConfig;
 import org.dsystems.stream.StreamFactory;
 import org.dsystems.utils.Record;
+
+import scala.Tuple2;
 
 public class SparkProcessor implements Serializable{
 
@@ -123,8 +128,18 @@ public class SparkProcessor implements Serializable{
 							return record;
 						}
 					});
-
 			stream.print();
+			JavaPairDStream<Record, Record> pairs = stream.mapToPair(
+					  new PairFunction<Record, Record, Record>() {
+						private static final long serialVersionUID = 1L;
+
+						//@Override 
+						public Tuple2<Record, Record> call(Record s) throws Exception {
+					      return new Tuple2<Record, Record>(s, null);
+					    }
+					  });
+			stream.dstream().saveAsTextFiles("maprfs://sj-il-bmi-db1:7222/user/bmi/Spark/data", ".data");
+			//pairs.saveAsHadoopFiles(ds.getName(), ".data");
 		}
 		jsc.start();
 		return true;
