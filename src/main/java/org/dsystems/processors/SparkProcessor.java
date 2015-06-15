@@ -93,23 +93,17 @@ public class SparkProcessor implements Serializable{
 	}
 */	
 	public boolean addStream(StreamConfig streamConfig) {
-		DataStream.Type streamType = DataStream.Type.valueOf(streamConfig.getInputConfig().getType());
-		Attributes streamAttrs = streamConfig.getInputConfig().getAttributes();
-		Parser.Type parserType = Parser.Type.valueOf(streamConfig.getParserConfig().getType());
-		Attributes parserAttrs = streamConfig.getParserConfig().getAttributes();
-		return this.addStream(streamType, streamAttrs, parserType, parserAttrs);
+		DataStream ds = DataStream.init(jsc, streamConfig);
+		if (ds != null) {
+			this.streams.add(ds);
+			return true;
+		}
+		return false;
+		//return new DataStream(streamConfig);
 		
 	}
-	public boolean addStream(DataStream.Type streamType, Attributes streamAttrs, Parser.Type parserType, Attributes parserAttrs) {
-		DataStream ds = StreamFactory.CreateStream(jsc, streamType, streamAttrs);
-		Parser parser = ParserFactory.getParser(parserType, parserAttrs);
-		if (parser == null)
-			return false;
-		ds.setParser(parser);
-		this.streams.add(ds);
-		return true;
-	}
-
+	
+	
 	private boolean start() {
 		
 		List<JavaDStream<Record>> records = new ArrayList<JavaDStream<Record>>();
@@ -129,16 +123,12 @@ public class SparkProcessor implements Serializable{
 						}
 					});
 			stream.print();
-			JavaPairDStream<Record, Record> pairs = stream.mapToPair(
-					  new PairFunction<Record, Record, Record>() {
-						private static final long serialVersionUID = 1L;
-
-						//@Override 
-						public Tuple2<Record, Record> call(Record s) throws Exception {
-					      return new Tuple2<Record, Record>(s, null);
-					    }
-					  });
-			stream.dstream().saveAsTextFiles("maprfs://sj-il-bmi-db1:7222/user/bmi/Spark/data", ".data");
+			if (ds.getOutput() != null) {
+				ds.getOutput().store(stream);
+			}
+			
+			//stream.dstream().saveAsTextFiles("maprfs://sj-il-bmi-db1:7222/user/bmi/Spark/data", "data");
+			//stream.dstream().saveAsTextFiles("file:///tmp/data", "data");
 			//pairs.saveAsHadoopFiles(ds.getName(), ".data");
 		}
 		jsc.start();

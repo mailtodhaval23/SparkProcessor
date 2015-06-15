@@ -11,6 +11,14 @@ public class StreamConfig {
 	private InputConfig inputConfig;
 	@SerializedName("Parser") 
 	private ParserConfig parserConfig;
+	@SerializedName("Output") 
+	private OutputConfig outputConfig;
+	public OutputConfig getOutputConfig() {
+		return outputConfig;
+	}
+	public void setOutputConfig(OutputConfig onputConfig) {
+		this.outputConfig = onputConfig;
+	}
 	public String getName() {
 		return name;
 	}
@@ -32,7 +40,7 @@ public class StreamConfig {
 	@Override
 	public String toString() {
 		return "StreamConfig [name=" + name + ", inputConfig=" + inputConfig
-				+ ", parserConfig=" + parserConfig + "]";
+				+ ", parserConfig=" + parserConfig + ", outputConfig=" + outputConfig+ "]";
 	}
 	
 }
