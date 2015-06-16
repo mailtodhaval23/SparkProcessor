@@ -1,0 +1,19 @@
+rule "ruletemplt10"
+if Temperature < 22 && Temperature > 18
+then
+filelogq ("Temperature is Greater than 18 and Less than 22 ! Its ${Temperature} !!!")
+end
+
+
+rule "ruletemplt5"
+if Temperature < 15
+then
+log ("Its too cold now! Temperature went down to ${Temperature} !!!")
+end
+
+rule "ruletempgt35"
+if Temperature > 35 && (Location == "LOC1" || Location == "LOC3")
+then
+log ("Oh man its too hot! Temperature went up to ${Temperature} at Location ${Location}!!!")
+filelogq ("Oh man its too hot! Temperature went up to ${Temperature} at Location ${Location}!!!")
+end

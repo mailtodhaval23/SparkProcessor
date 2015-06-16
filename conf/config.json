@@ -1,0 +1,49 @@
+{
+  "Name": "RunSparkProcessor Example",
+  "Streams": [
+    {
+      "Name": "NETWORK_TEMPERATURE_STREAM",
+      "Input": {
+        "Type": "NETWORK",
+        "Properties": {
+          "port": "9999",
+          "host": "localhost"
+        }
+      },
+      "Parser": {
+        "Type": "CSV",
+        "Properties": {
+          "fields": "TimeStamp,Location,Temperature"
+        }
+      },
+      "Output": {
+        "Type": "FILE",
+        "Properties": {
+          "directory": "file:///tmp/data",
+          "extension": "data"
+        }
+      },
+      "Aggregations": [
+        {
+          "GroupBy": "Location",
+          "Name": "Aggregations1",
+          "Aggregates": [
+            {
+              "Name": "SumOfTemperature",
+              "Field": "Temperature",
+              "Function": "SUM"
+            },
+            {
+              "Name": "AverageOfTemperature",
+              "Field": "Temperature",
+              "Function": "AVERAGE"
+            }
+          ]
+        }
+      ],
+      "RulesFile": "/home/bmi/SparkWork/App1.rls",
+      "ActionsFile": "/home/bmi/SparkWork/Actions.json",
+      "AggregateRulesFile": ""
+    }
+  ]
+}

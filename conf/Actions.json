@@ -1,0 +1,17 @@
+[
+  {
+    "name": "filelog",
+    "className": "org.dsystems.rules.action.FileLogAction",
+    "properties": {
+      "filename": "/home/bmi/SparkWork/Alerts.log",
+      "message": "Temperature is Less than 10! Its ${Temperature} !!!"
+    }
+  },
+  {
+    "name": "filelogq",
+    "className": "org.dsystems.rules.action.FileLogAction",
+    "properties": {
+      "filename": "/home/bmi/SparkWork/Alerts2.log"
+    }
+  }
+]
