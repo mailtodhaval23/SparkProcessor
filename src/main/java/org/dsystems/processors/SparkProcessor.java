@@ -2,17 +2,23 @@ package org.dsystems.processors;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.dsystems.utils.Attributes;
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.streaming.Durations;
+import org.apache.spark.streaming.Time;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
+import org.dsystems.aggregates.Aggregation;
 import org.dsystems.parser.Parser;
 import org.dsystems.parser.ParserFactory;
 import org.dsystems.rules.engine.RulesEngine;
@@ -32,8 +38,7 @@ public class SparkProcessor implements Serializable{
 	private static SparkProcessor sp;
 	private List<DataStream> streams;
 	private String name;
-	RulesEngine ruleEngine;
-
+	
 	/*private SparkProcessor() {
 		this.streams = new ArrayList<DataStream>();
 	}*/
@@ -45,7 +50,7 @@ public class SparkProcessor implements Serializable{
 	}
 	private SparkProcessor(String name, Attributes attrs) {
 		this(name);
-	    initRulesEngine(attrs);
+	    //initRulesEngine(attrs);
 	}
 
 	private void initSparkContext(String name) {
@@ -53,18 +58,6 @@ public class SparkProcessor implements Serializable{
 	    jsc = new JavaStreamingContext(sparkConf, Durations.seconds(10));
 	}
 
-	private void initRulesEngine(Attributes attrs) {
-		if (attrs.getValue("rules_file") != null) {
-			this.initRulesEngine(attrs.getValue("rules_file"),attrs.getValue("actions_file"));
-	    }
-	}
-
-	private void initRulesEngine(String rulesFile, String actionsFile){
-		this.ruleEngine = RulesEngine.init(rulesFile,actionsFile);
-	}
-	private void initRulesEngine(String rulesFile){
-		this.initRulesEngine(rulesFile, null);
-	}
 
 	/*private SparkProcessor(List<DataStream> streams, Parser parser) {
 		this.streams = streams;
@@ -78,7 +71,7 @@ public class SparkProcessor implements Serializable{
 				sp.addStream(streamConfig);
 			}
 			if (sp.streams.size() > 0) {
-				sp.initRulesEngine(config.getRulesFileName(), config.getActionsFileName());
+				//sp.initRulesEngine(config.getRulesFileName(), config.getActionsFileName());
 				return sp.start();
 			}
 		}
@@ -94,6 +87,7 @@ public class SparkProcessor implements Serializable{
 */	
 	public boolean addStream(StreamConfig streamConfig) {
 		DataStream ds = DataStream.init(jsc, streamConfig);
+		System.out.println("SparkProcessor:: addStream: ds:"+ ds.toString());
 		if (ds != null) {
 			this.streams.add(ds);
 			return true;
@@ -107,9 +101,8 @@ public class SparkProcessor implements Serializable{
 	private boolean start() {
 		
 		List<JavaDStream<Record>> records = new ArrayList<JavaDStream<Record>>();
-		final RulesEngine rules = this.ruleEngine;
+		//final RulesEngine rules = this.ruleEngine;
 		for (final DataStream<String> ds : streams) {
-			@SuppressWarnings("unchecked")
 			JavaDStream<Record> stream = ds.getStream().map(
 					new Function<String, Record>() {
 						private static final long serialVersionUID = 1L;
@@ -117,15 +110,18 @@ public class SparkProcessor implements Serializable{
 						// final Parser parser = ds.getParser();
 						public Record call(String data) throws Exception {
 							Record record = ds.getParser().parse(data);
-							if (rules != null)
-								rules.run(record);
+							if (ds.getRules() != null)
+								ds.getRules().run(record);
 							return record;
 						}
 					});
 			stream.print();
 			if (ds.getOutput() != null) {
-				ds.getOutput().store(stream);
+				ds.getOutput().store(ds.getName(), stream);
 			}
+			
+			generateAggregateStreams(ds, stream);
+		
 			
 			//stream.dstream().saveAsTextFiles("maprfs://sj-il-bmi-db1:7222/user/bmi/Spark/data", "data");
 			//stream.dstream().saveAsTextFiles("file:///tmp/data", "data");
@@ -135,6 +131,57 @@ public class SparkProcessor implements Serializable{
 		return true;
 	}
 
+	private void generateAggregateStreams(DataStream<String> ds, JavaDStream<Record> stream) {
+		List<Aggregation> aggregations = ds.getAggregations();
+		if (aggregations == null) 
+			return;
+		
+		for (final Aggregation aggregation: aggregations) {
+			
+			JavaPairDStream<Record, Record> pairStream = stream.mapToPair(new PairFunction<Record, Record, Record>() {
+
+				private static final long serialVersionUID = 1L;
+
+				public Tuple2<Record, Record> call(Record record)
+						throws Exception {
+					Record key = record.getSubRecord(aggregation.getKey());
+					return new Tuple2<Record, Record>(key, record);
+				}
+			});
+			
+			//JavaPairDStream<Record, Record> aggregagteStream = pairStream.
+			JavaPairDStream<Record, Iterable<Record>> groupStream = pairStream.groupByKey();
+			groupStream.print();
+			
+			
+			JavaPairDStream<Record, Record> aggregateStream = groupStream.mapValues(new Function<Iterable<Record>, Record>() {
+
+				public Record call(Iterable<Record> record) throws Exception {
+					Iterator<Record> itr = record.iterator();
+					List<Record> records = new ArrayList<Record>();
+					while(itr.hasNext()) {
+						records.add(itr.next());
+					}
+					return aggregation.getAggregates(records);
+					//return null;
+				}
+			});
+			 aggregateStream.print();
+			 if (ds.getOutput() != null) {
+					ds.getOutput().store(aggregation.getName(), aggregateStream);
+					//aggregateStream.sa
+			}
+			/*groupStream.flatMap(new FlatMapFunction<Tuple2<Record,Iterable<Record>>, U>() {
+
+				public Iterable<U> call(Tuple2<Record, Iterable<Record>> arg0)
+						throws Exception {
+					// TODO Auto-generated method stub
+					return null;
+				}
+			});*/
+		}
+		
+	}
 	public String getName() {
 		return name;
 	}

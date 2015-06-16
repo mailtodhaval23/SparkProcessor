@@ -1,5 +1,7 @@
 package org.dsystems.stream;
 
+import java.util.List;
+
 import com.google.gson.annotations.SerializedName;
 
 
@@ -13,6 +15,35 @@ public class StreamConfig {
 	private ParserConfig parserConfig;
 	@SerializedName("Output") 
 	private OutputConfig outputConfig;
+	@SerializedName("Aggregations")
+	private List<AggregationConfig> aggregationConfigs;
+	@SerializedName("RulesFile") 
+	private String rulesFile;
+	@SerializedName("ActionsFile") 
+	private String actionsFile;
+	@SerializedName("AggregateRulesFile") 
+	private String aggregateRulesFile;
+	
+
+	public String getRulesFile() {
+		return rulesFile;
+	}
+	public void setRulesFile(String rulesFile) {
+		this.rulesFile = rulesFile;
+	}
+	public String getActionsFile() {
+		return actionsFile;
+	}
+	public void setActionsFile(String actionsFile) {
+		this.actionsFile = actionsFile;
+	}
+	public String getAggregateRulesFile() {
+		return aggregateRulesFile;
+	}
+	public void setAggregateRulesFile(String aggregateRulesFile) {
+		this.aggregateRulesFile = aggregateRulesFile;
+	}
+	
 	public OutputConfig getOutputConfig() {
 		return outputConfig;
 	}
@@ -37,10 +68,21 @@ public class StreamConfig {
 	public void setParserConfig(ParserConfig parserConfig) {
 		this.parserConfig = parserConfig;
 	}
+	public List<AggregationConfig> getAggregationConfigs() {
+		return aggregationConfigs;
+	}
+	public void setAggregationConfigs(List<AggregationConfig> aggregationConfigs) {
+		this.aggregationConfigs = aggregationConfigs;
+	}
 	@Override
 	public String toString() {
 		return "StreamConfig [name=" + name + ", inputConfig=" + inputConfig
-				+ ", parserConfig=" + parserConfig + ", outputConfig=" + outputConfig+ "]";
+				+ ", parserConfig=" + parserConfig + ", outputConfig="
+				+ outputConfig + ", aggregationConfigs=" + aggregationConfigs
+				+ ", rulesFile=" + rulesFile + ", actionsFile=" + actionsFile
+				+ ", aggregateRulesFile=" + aggregateRulesFile + "]";
 	}
+	
+	
 	
 }

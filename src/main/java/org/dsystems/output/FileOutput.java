@@ -2,7 +2,9 @@ package org.dsystems.output;
 
 import java.io.Serializable;
 
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.streaming.api.java.JavaDStream;
+import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.dsystems.utils.Attributes;
 import org.dsystems.utils.Record;
 import org.dsystems.utils.ValidatorResponse;
@@ -12,7 +14,7 @@ public class FileOutput extends Output implements Serializable {
 	private String directory;
 	private String extension;
 	@Override
-	public ValidatorResponse init(Attributes attrs) {
+	public ValidatorResponse init(String streamName, Attributes attrs) {
 		
 		boolean isValid = false;
 		String message = "";
@@ -27,8 +29,7 @@ public class FileOutput extends Output implements Serializable {
 			isValid = false;
 			message = "Required property directory not defined!!!";
 		}
-		ValidatorResponse vr = new ValidatorResponse(isValid, message);
-		return vr;
+		return new ValidatorResponse(isValid, message);
 	}
 
 
@@ -42,9 +43,17 @@ public class FileOutput extends Output implements Serializable {
 
 
 	@Override
-	public void store(JavaDStream stream) {
-		stream.dstream().saveAsTextFiles(directory, extension);
+	public void store(String dirName, JavaDStream stream) {
+		stream.dstream().saveAsTextFiles(directory + "/" + dirName + "/", extension);
 		
+	}
+
+
+	@Override
+	public void store(String dirName, JavaPairDStream stream) {
+		// TODO Auto-generated method stub
+		stream.dstream().saveAsTextFiles(directory + "/" + dirName + "/", extension);
+		//stream.saveAsTextFile(path);
 	}
 
 }
