@@ -177,7 +177,7 @@ public class DataStream<T> implements Serializable {
 			
 			return ds;
 		}
-		return null;
+		return ds;
 
 	}
 

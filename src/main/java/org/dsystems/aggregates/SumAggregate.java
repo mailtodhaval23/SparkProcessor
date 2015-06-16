@@ -5,6 +5,11 @@ import java.util.List;
 
 public class SumAggregate extends Aggregate implements Serializable{
 
+	static
+	{
+		AggregateFactory.instance().registerProduct("SUM", new SumAggregate());
+	}
+	
 	@Override
 	public Object aggregate(List<Object> values) {
 		Double sum = 0.0;
@@ -19,5 +24,10 @@ public class SumAggregate extends Aggregate implements Serializable{
 			sum += v;
 		}
 		return sum;
+	}
+
+	@Override
+	public Aggregate createAggregate() {
+		return new SumAggregate();
 	}
 }

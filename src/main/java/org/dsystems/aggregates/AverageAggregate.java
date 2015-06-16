@@ -5,6 +5,10 @@ import java.util.List;
 
 public class AverageAggregate extends Aggregate implements Serializable{
 
+	static
+	{
+		AggregateFactory.instance().registerProduct("AVERAGE", new AverageAggregate());
+	}
 	@Override
 	public Object aggregate(List<Object> values) {
 		Double sum = 0.0;
@@ -24,5 +28,9 @@ public class AverageAggregate extends Aggregate implements Serializable{
 			return sum/count;
 		else 
 			return "NA";
+	}
+	@Override
+	public Aggregate createAggregate() {
+		return new AverageAggregate();
 	}
 }

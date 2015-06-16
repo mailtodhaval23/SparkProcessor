@@ -19,6 +19,19 @@ import com.google.gson.stream.JsonReader;
 
 public class RunSparkProcessor {
 
+	static
+	{
+		try
+		{
+			Class.forName("org.dsystems.aggregates.SumAggregate");
+			Class.forName("org.dsystems.aggregates.AverageAggregate");
+			Class.forName("org.dsystems.aggregates.StandardDeviationAggregate");
+		}
+		catch (ClassNotFoundException any)
+		{
+			any.printStackTrace();
+		}
+	}
 	public static void main(String[] args) {
 		
 		//DataStream<String> ds = StreamFactory.CreateStream(ssc, DataStream.Type.NETWORK , attrs);

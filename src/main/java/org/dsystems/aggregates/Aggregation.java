@@ -13,7 +13,6 @@ import scala.Array;
 
 public class Aggregation implements Serializable{
 
-
 	private static final long serialVersionUID = 1L;
 	private String[] key;
 	private String name;
@@ -64,14 +63,15 @@ public class Aggregation implements Serializable{
 		for(AggregateConfig agConfig: config.getAggregats()){
 			aggregation.addAggregator(agConfig);
 		}
-		System.out.println("Aggregation :: createAggregation(): aggregation:" + aggregation );
+		System.out.println("Aggregation :: createAggregation(): aggregation:" + aggregation.toString() );
 		return aggregation;
 	}
 	
 	public boolean addAggregator(AggregateConfig aggregateConfig){
-		System.out.println("Aggregation :: addAggregator(): aggregateConfig:" + aggregateConfig );
-		Aggregate.Type type = Type.valueOf(aggregateConfig.getAggregateFunction());
-		Aggregate agg = AggregateFactory.getAggregate(type);
+		System.out.println("Aggregation :: addAggregator(): aggregateConfig:" + aggregateConfig.toString() );
+		//Aggregate.Type type = Type.valueOf(aggregateConfig.getAggregateFunction());
+		//Aggregate agg = AggregateFactory.getAggregate(type);
+		Aggregate agg = AggregateFactory.instance().createAggregate(aggregateConfig.getAggregateFunction());
 		if (agg == null)
 			return false;
 		if (this.aggregators == null)
