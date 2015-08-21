@@ -1,10 +1,10 @@
-package org.dsystems.stream;
+package org.dsystems.config;
 
 import org.dsystems.utils.Attributes;
 
 import com.google.gson.annotations.SerializedName;
 
-public class InputConfig {
+public class OutputConfig {
 	@SerializedName("Type")
 	private String type;
 	@SerializedName("Properties")
@@ -23,7 +23,7 @@ public class InputConfig {
 	}
 	@Override
 	public String toString() {
-		return "InputConfig [type=" + type + ", attributes=" + attributes + "]";
+		return "OutputConfig [type=" + type + ", attributes=" + attributes + "]";
 	}
 	
 }

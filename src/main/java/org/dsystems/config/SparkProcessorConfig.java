@@ -1,8 +1,6 @@
-package org.dsystems.stream;
+package org.dsystems.config;
 
 import java.util.List;
-
-import org.dsystems.stream.StreamConfig;
 
 import com.google.gson.annotations.SerializedName;
 

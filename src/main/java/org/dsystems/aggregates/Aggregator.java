@@ -15,7 +15,9 @@ public class Aggregator implements Serializable{
 	public Object getAggregation (List<Record> records) {
 		List<Object> values = new ArrayList<Object>();
 		for (Record record: records) {
-			values.add(record.get(field));
+			Object value = record.get(field);
+			if (value != null)
+				values.add(value);
 		}
 		return aggregate.aggregate(values);
 	}

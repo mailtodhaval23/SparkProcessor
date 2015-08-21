@@ -16,7 +16,8 @@ public class SumAggregate extends Aggregate implements Serializable{
 		for(Object value: values) {
 			Double v = 0.0;
 			try {
-				v = Double.parseDouble(value.toString());
+				if (value != null)
+					v = Double.parseDouble(value.toString());
 			} catch (NumberFormatException nfe) {
 				//Do nothing, its ok if value is not convertible to double. Ignore that value;
 				System.out.println("Value not convertiable to number: " + value.toString());

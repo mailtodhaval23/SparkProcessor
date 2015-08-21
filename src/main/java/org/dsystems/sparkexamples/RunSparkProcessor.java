@@ -6,13 +6,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.dsystems.utils.Attributes;
+import org.dsystems.config.SparkProcessorConfig;
+import org.dsystems.config.StreamConfig;
 import org.dsystems.parser.CSVParser;
 import org.dsystems.parser.Parser;
 import org.dsystems.parser.ParserFactory;
 import org.dsystems.processors.SparkProcessor;
-import org.dsystems.stream.SparkProcessorConfig;
 import org.dsystems.stream.DataStream.Type;
-import org.dsystems.stream.StreamConfig;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
@@ -26,6 +26,7 @@ public class RunSparkProcessor {
 			Class.forName("org.dsystems.aggregates.SumAggregate");
 			Class.forName("org.dsystems.aggregates.AverageAggregate");
 			Class.forName("org.dsystems.aggregates.StandardDeviationAggregate");
+			Class.forName("org.dsystems.stream.NetworkStream");
 		}
 		catch (ClassNotFoundException any)
 		{

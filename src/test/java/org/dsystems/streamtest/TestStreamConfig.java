@@ -1,8 +1,8 @@
 package org.dsystems.streamtest;
 
-import org.dsystems.stream.InputConfig;
-import org.dsystems.stream.ParserConfig;
-import org.dsystems.stream.StreamConfig;
+import org.dsystems.config.InputConfig;
+import org.dsystems.config.ParserConfig;
+import org.dsystems.config.StreamConfig;
 import org.dsystems.utils.Attributes;
 import org.junit.Test;
 

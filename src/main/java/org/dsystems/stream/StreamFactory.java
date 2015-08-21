@@ -2,9 +2,12 @@ package org.dsystems.stream;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import org.dsystems.utils.Attributes;
 
+import org.dsystems.aggregates.Aggregate;
+import org.dsystems.aggregates.AggregateFactory;
+import org.dsystems.utils.Attributes;
 import org.apache.spark.api.java.StorageLevels;
 import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.streaming.Duration;
@@ -21,8 +24,34 @@ public class StreamFactory  implements Serializable{
 
 
 	private static final long serialVersionUID = 1L;
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private HashMap registredInputStreams = new HashMap();
+	private static StreamFactory instance;
+	
+	private StreamFactory(){
+		registredInputStreams = new HashMap();
+	}
+	
+	public static StreamFactory instance() {
+		if(instance == null) {
+			instance = new StreamFactory();
+		}
+		return instance;
+	}
+	public void registerProduct(String type, InputStream p)    {
+		registredInputStreams.put(type, p);
+	}
+	
+	public InputStream createInputStream(JavaStreamingContext ssc, String type,
+			Attributes attr) throws Exception {
+		InputStream is = (InputStream) registredInputStreams.get(type);
+		if (is != null) {
+			return is.init(ssc, attr);
+		} else {
+			return null;
+		}
+	}
+	
+	/*@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static <T> DataStream<T> CreateStream(JavaStreamingContext ssc, DataStream.Type type,
 			Attributes attr) {
 		switch (type) {
@@ -40,7 +69,7 @@ public class StreamFactory  implements Serializable{
 				return null;
 			}
 
-	}
+	}*/
 
 	private static JavaDStream<byte[]> createKinesisStream(JavaStreamingContext ssc, Attributes attr) {
 	    // Populate the appropriate variables from the given args

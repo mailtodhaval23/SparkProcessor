@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.dsystems.aggregates.Aggregate.Type;
-import org.dsystems.stream.AggregateConfig;
-import org.dsystems.stream.AggregationConfig;
+import org.dsystems.config.AggregateConfig;
+import org.dsystems.config.AggregationConfig;
 import org.dsystems.utils.Record;
 
 import scala.Array;
@@ -16,6 +16,8 @@ public class Aggregation implements Serializable{
 	private static final long serialVersionUID = 1L;
 	private String[] key;
 	private String name;
+	private long windowDuration;
+	private long slideDuration;
 	private List<Aggregator> aggregators;
 
 	public List<Aggregator> getAggregators() {
@@ -60,6 +62,8 @@ public class Aggregation implements Serializable{
 		String[] keys = config.getKey().split(",");
 		aggregation.setKey(keys);
 		aggregation.name = config.getName();
+		aggregation.windowDuration = config.getWindowDuration();
+		aggregation.slideDuration = config.getSlideDuration();
 		for(AggregateConfig agConfig: config.getAggregats()){
 			aggregation.addAggregator(agConfig);
 		}
@@ -82,5 +86,13 @@ public class Aggregation implements Serializable{
 		aggregator.setName(aggregateConfig.getName());
 		this.aggregators.add(aggregator);
 		return true;
+	}
+
+	public long getWindowDuration() {
+		return windowDuration;
+	}
+
+	public long getSlideDuration() {
+		return slideDuration;
 	}
 }

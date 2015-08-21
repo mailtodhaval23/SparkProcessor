@@ -13,18 +13,19 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.api.java.function.PairFunction;
+import org.apache.spark.streaming.Duration;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.Time;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.dsystems.aggregates.Aggregation;
+import org.dsystems.config.SparkProcessorConfig;
+import org.dsystems.config.StreamConfig;
 import org.dsystems.parser.Parser;
 import org.dsystems.parser.ParserFactory;
 import org.dsystems.rules.engine.RulesEngine;
 import org.dsystems.stream.DataStream;
-import org.dsystems.stream.SparkProcessorConfig;
-import org.dsystems.stream.StreamConfig;
 import org.dsystems.stream.StreamFactory;
 import org.dsystems.utils.Record;
 
@@ -44,7 +45,7 @@ public class SparkProcessor implements Serializable{
 	}*/
 
 	private SparkProcessor(String name) {
-		initSparkContext(name);
+		initSparkContext(name, 1);
 		this.streams = new ArrayList<DataStream>();
 		this.name = name;
 	}
@@ -53,9 +54,9 @@ public class SparkProcessor implements Serializable{
 	    //initRulesEngine(attrs);
 	}
 
-	private void initSparkContext(String name) {
+	private void initSparkContext(String name, long duration) {
 		SparkConf sparkConf = new SparkConf().setAppName(name);
-	    jsc = new JavaStreamingContext(sparkConf, Durations.seconds(10));
+	    jsc = new JavaStreamingContext(sparkConf, Durations.seconds(duration));
 	}
 
 
@@ -68,7 +69,12 @@ public class SparkProcessor implements Serializable{
 			sp = new SparkProcessor(config.getName());
 			sp.name = config.getName();
 			for (StreamConfig streamConfig: config.getStreamConfigs()){
-				sp.addStream(streamConfig);
+				try {
+					sp.addStream(streamConfig);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 			if (sp.streams.size() > 0) {
 				//sp.initRulesEngine(config.getRulesFileName(), config.getActionsFileName());
@@ -85,7 +91,7 @@ public class SparkProcessor implements Serializable{
 		return sp;
 	}
 */	
-	public boolean addStream(StreamConfig streamConfig) {
+	public boolean addStream(StreamConfig streamConfig) throws Exception {
 		DataStream ds = DataStream.init(jsc, streamConfig);
 		System.out.println("SparkProcessor:: addStream: ds:"+ ds.toString());
 		if (ds != null) {
@@ -94,7 +100,6 @@ public class SparkProcessor implements Serializable{
 		}
 		return false;
 		//return new DataStream(streamConfig);
-		
 	}
 	
 	
@@ -103,16 +108,19 @@ public class SparkProcessor implements Serializable{
 		List<JavaDStream<Record>> records = new ArrayList<JavaDStream<Record>>();
 		//final RulesEngine rules = this.ruleEngine;
 		for (final DataStream<String> ds : streams) {
-			JavaDStream<Record> stream = ds.getStream().map(
+			JavaDStream<Record> stream = ds.getStream().getStream().map(
 					new Function<String, Record>() {
 						private static final long serialVersionUID = 1L;
 
 						// final Parser parser = ds.getParser();
 						public Record call(String data) throws Exception {
 							Record record = ds.getParser().parse(data);
-							if (ds.getRules() != null)
-								ds.getRules().run(record);
-							return record;
+							if (record != null && record.size() > 0){
+								if (ds.getRules() != null)
+									ds.getRules().run(record);
+								return record;
+							} else 
+								return new Record();
 						}
 					});
 			stream.print();
@@ -150,9 +158,10 @@ public class SparkProcessor implements Serializable{
 			});
 			
 			//JavaPairDStream<Record, Record> aggregagteStream = pairStream.
-			JavaPairDStream<Record, Iterable<Record>> groupStream = pairStream.groupByKey();
+			Duration windowDuration = Durations.seconds(aggregation.getWindowDuration());
+			Duration slideDuration = Durations.seconds(aggregation.getSlideDuration()) ;
+			JavaPairDStream<Record, Iterable<Record>> groupStream = pairStream.groupByKeyAndWindow(windowDuration, slideDuration);
 			groupStream.print();
-			
 			
 			JavaPairDStream<Record, Record> aggregateStream = groupStream.mapValues(new Function<Iterable<Record>, Record>() {
 
@@ -171,16 +180,13 @@ public class SparkProcessor implements Serializable{
 					ds.getOutput().store(aggregation.getName(), aggregateStream);
 					//aggregateStream.sa
 			}
-			/*groupStream.flatMap(new FlatMapFunction<Tuple2<Record,Iterable<Record>>, U>() {
-
-				public Iterable<U> call(Tuple2<Record, Iterable<Record>> arg0)
-						throws Exception {
-					// TODO Auto-generated method stub
-					return null;
-				}
-			});*/
+			
 		}
 		
+	}
+	private Duration slideDuration() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	public String getName() {
 		return name;

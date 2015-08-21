@@ -1,4 +1,4 @@
-package org.dsystems.stream;
+package org.dsystems.config;
 
 import java.util.List;
 
@@ -9,8 +9,11 @@ public class StreamConfig {
 
 	@SerializedName("Name") 
 	private String name;
+	@SerializedName("Duration") 
+	private long duration;
 	@SerializedName("Input") 
 	private InputConfig inputConfig;
+
 	@SerializedName("Parser") 
 	private ParserConfig parserConfig;
 	@SerializedName("Output") 
@@ -82,7 +85,13 @@ public class StreamConfig {
 				+ ", rulesFile=" + rulesFile + ", actionsFile=" + actionsFile
 				+ ", aggregateRulesFile=" + aggregateRulesFile + "]";
 	}
+	public long getDuration() {
+		// TODO Auto-generated method stub
+		return this.duration;
+	}
 	
-	
+	public void setDuration(long duration) {
+		this.duration = duration;
+	}
 	
 }

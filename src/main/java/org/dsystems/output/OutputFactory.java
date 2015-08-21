@@ -5,7 +5,7 @@ import org.dsystems.utils.ValidatorResponse;
 
 public class OutputFactory {
 	
-	public static Output getOutput(Output.Type type, String streamName, Attributes attrs) {
+	public static Output getOutput(Output.Type type, String streamName, Attributes attrs) throws Exception {
 		
 		Output output = null;
 		switch(type) {

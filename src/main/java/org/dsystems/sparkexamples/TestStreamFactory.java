@@ -23,7 +23,7 @@ public class TestStreamFactory {
 	    SparkConf sparkConf = new SparkConf().setAppName("StreamFactoryTest");
 	    JavaStreamingContext ssc = new JavaStreamingContext(sparkConf, Durations.seconds(10));
 
-		DataStream<?> stream = StreamFactory.CreateStream(ssc, DataStream.Type.NETWORK, attr);
+		/*DataStream<?> stream = StreamFactory.CreateStream(ssc, DataStream.Type.NETWORK, attr);
 		attr.putValue("port", "9998");
 		DataStream<?> stream8 = StreamFactory.CreateStream(ssc, DataStream.Type.NETWORK, attr);
 		
@@ -32,7 +32,7 @@ public class TestStreamFactory {
 		stream8.getStream().print();
 		System.out.println("============================ End current batch data.");
 		
-		ssc.start();
+		ssc.start();*/
 	}
 	
 }

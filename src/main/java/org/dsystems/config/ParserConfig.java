@@ -1,4 +1,4 @@
-package org.dsystems.stream;
+package org.dsystems.config;
 
 import org.dsystems.utils.Attributes;
 

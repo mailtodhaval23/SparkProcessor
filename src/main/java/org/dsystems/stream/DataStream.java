@@ -7,6 +7,11 @@ import java.util.List;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.dsystems.aggregates.Aggregation;
+import org.dsystems.config.AggregationConfig;
+import org.dsystems.config.InputConfig;
+import org.dsystems.config.OutputConfig;
+import org.dsystems.config.ParserConfig;
+import org.dsystems.config.StreamConfig;
 import org.dsystems.output.Output;
 import org.dsystems.output.OutputFactory;
 import org.dsystems.parser.Parser;
@@ -22,10 +27,20 @@ public class DataStream<T> implements Serializable {
 		NETWORK, KINESIS
 	};
 
-	private transient JavaDStream<T> stream;
+	//private transient JavaDStream stream;
+	private transient InputStream stream;
 	private Parser parser;
 	private Output output;
 	private String name;
+	private long duration;
+	public long getDuration() {
+		return duration;
+	}
+
+	public void setDuration(long duration) {
+		this.duration = duration;
+	}
+
 	private RulesEngine rules;
 	private List<Aggregation> aggregations;
 
@@ -79,15 +94,15 @@ public class DataStream<T> implements Serializable {
 		return ds;
 	}
 */
-	public DataStream(JavaDStream<T> stream) {
+	public DataStream(InputStream stream) {
 		this.setStream(stream);
 	}
 
-	public JavaDStream<T> getStream() {
+	public InputStream getStream() {
 		return stream;
 	}
 
-	public void setStream(JavaDStream<T> stream) {
+	public void setStream(InputStream stream) {
 		this.stream = stream;
 	}
 
@@ -115,12 +130,13 @@ public class DataStream<T> implements Serializable {
 				+ aggregations + "]";
 	}
 
-	private static DataStream getDataStream(JavaStreamingContext jsc,
-			InputConfig inputConfig) {
+	private static InputStream getDataStream(JavaStreamingContext jsc,
+			InputConfig inputConfig) throws Exception {
 		DataStream.Type streamType = DataStream.Type.valueOf(inputConfig
 				.getType());
 		Attributes streamAttrs = inputConfig.getAttributes();
-		return StreamFactory.CreateStream(jsc, streamType, streamAttrs);
+		//return StreamFactory.CreateStream(jsc, streamType, streamAttrs);
+		return StreamFactory.instance().createInputStream(jsc, inputConfig.getType(), inputConfig.getAttributes());
 	}
 
 	private static Parser getParser(ParserConfig parserConfig) {
@@ -129,7 +145,7 @@ public class DataStream<T> implements Serializable {
 		return ParserFactory.getParser(parserType, parserAttrs);
 	}
 
-	private static Output getOutput(String streamName, OutputConfig outoutConfig) {
+	private static Output getOutput(String streamName, OutputConfig outoutConfig) throws Exception {
 		Output.Type outputType = Output.Type.valueOf(outoutConfig.getType());
 		Attributes outputAttrs = outoutConfig.getAttributes();
 		return OutputFactory.getOutput(outputType, streamName, outputAttrs);
@@ -150,10 +166,13 @@ public class DataStream<T> implements Serializable {
 		this.aggregations.add(aggregation);
 	}
 	
-	public static DataStream init(JavaStreamingContext jsc, StreamConfig streamConfig) {
+	public static DataStream init(JavaStreamingContext jsc, StreamConfig streamConfig) throws Exception {
 
-		DataStream ds = getDataStream(jsc, streamConfig.getInputConfig());
+		DataStream ds = new DataStream(); 
+		InputStream is = getDataStream(jsc, streamConfig.getInputConfig());
+		ds.setStream(is);
 		ds.setName(streamConfig.getName());
+		ds.setDuration(streamConfig.getDuration());
 		if (ds != null) {
 			Parser parser = getParser(streamConfig.getParserConfig());
 			if (parser != null) {

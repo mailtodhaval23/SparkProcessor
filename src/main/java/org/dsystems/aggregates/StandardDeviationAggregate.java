@@ -24,7 +24,9 @@ public class StandardDeviationAggregate extends Aggregate implements Serializabl
 		for(Object value: values) {
 			Double v = 0.0;
 			try {
-				v = Double.parseDouble(value.toString());
+				if (value!= null) {
+					v = Double.parseDouble(value.toString());
+				}
 				data[ctr] = v;
 			} catch (NumberFormatException nfe) {
 				//Do nothing, its ok if value is not convertible to double. Ignore that value;
